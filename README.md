@@ -13,7 +13,7 @@
  *
  * Copyright 2021 ForgeRock AS.
 -->
-# Evenarc
+# Eventarc
 
 A simple authentication node for ForgeRock's [Identity Platform][forgerock_platform] 7.1.0 and above. This node... **SHORT DESCRIPTION HERE**
 
