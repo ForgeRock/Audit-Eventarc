@@ -100,23 +100,6 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
             this.client = client;
         }
         baseUri = buildBaseUri();
-
-//        final EventBufferingConfiguration bufferConfig = configuration.getBuffering();
-//        if (bufferConfig.isEnabled()) {
-//            final Duration writeInterval =
-//                    bufferConfig.getWriteInterval() == null || bufferConfig.getWriteInterval().isEmpty()
-//                            ? null
-//                            : Duration.duration(bufferConfig.getWriteInterval());
-//            batchIndexer = BufferedBatchPublisher.newBuilder(this)
-//                    .capacity(bufferConfig.getMaxSize())
-//                    .writeInterval(writeInterval)
-//                    .maxBatchEvents(bufferConfig.getMaxBatchedEvents())
-//                    .averagePerEventPayloadSize(BATCH_INDEX_AVERAGE_PER_EVENT_PAYLOAD_SIZE)
-//                    .autoFlush(ALWAYS_FLUSH_BATCH_QUEUE)
-//                    .build();
-//        } else {
-//            batchIndexer = null;
-//        }
     }
 
     @Override
@@ -140,51 +123,7 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
     public Promise<QueryResponse, ResourceException> queryEvents(final Context context, final String topic,
            final QueryRequest query, final QueryResourceHandler handler) {
            return null;
-//        final int pageSize = query.getPageSize() <= 0 ? DEFAULT_PAGE_SIZE : query.getPageSize();
-//        // set the offset to either first the offset provided, or second the paged result cookie value, or finally 0
-//        final int offset;
-//        if (query.getPagedResultsOffset() != 0) {
-//            offset = query.getPagedResultsOffset();
-//        } else if (query.getPagedResultsCookie() != null) {
-//            offset = Integer.valueOf(query.getPagedResultsCookie());
-//        } else {
-//            offset = DEFAULT_OFFSET;
-//        }
-//
-//        final JsonValue payload =
-//                json(object(field(
-//                        QUERY, query.getQueryFilter().accept(ELASTICSEARCH_QUERY_FILTER_VISITOR, null).getObject())));
-//        try {
-//            final Request request = createRequest(GET, buildSearchUri(topic, pageSize, offset), payload.getObject());
-//            return client.send(request).thenAsync(closeSilently(response -> {
-//                if (!response.getStatus().isSuccessful()) {
-//                    final String message =
-//                            "Elasticsearch response (" + indexName + "/" + topic + SEARCH + "): "
-//                            + response.getEntity();
-//                    return newResourceException(response.getStatus().getCode(), message).asPromise();
-//                }
-//
-//                return response.getEntity().getJsonAsync()
-//                        .then(JsonValue::json)
-//                        .then(events -> {
-//                            for (JsonValue event : events.get(HITS).get(HITS)) {
-//                                handler.handleResource(
-//                                        newResourceResponse(event.get(FIELD_CONTENT_ID).asString(), null,
-//                                                ElasticsearchUtil.denormalizeJson(event.get(SOURCE))));
-//                            }
-//                            final int totalResults = events.get(HITS).get(TOTAL).asInteger();
-//                            final String pagedResultsCookie = (pageSize + offset) >= totalResults
-//                                    ? null
-//                                    : Integer.toString(pageSize + offset);
-//                            return newQueryResponse(pagedResultsCookie,
-//                                    CountPolicy.EXACT,
-//                                    totalResults);
-//                        })
-//                        .thenCatchAsync(internalServerException());
-//            }), noopExceptionAsyncFunction());
-//        } catch (URISyntaxException e) {
-//            return new InternalServerErrorException(e.getMessage(), e).asPromise();
-//        }
+
     }
 
     private static <R> AsyncFunction<? super Exception, R, ResourceException> internalServerException() {
@@ -194,46 +133,12 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
      @Override
     public Promise<ResourceResponse, ResourceException> readEvent(final Context context, final String topic,
             final String resourceId) {
-//        final Request request;
-//        try {
-//            request = createRequest(GET, buildEventUri(topic, resourceId), null);
-//        } catch (Exception e) {
-//            final String error = String.format("Unable to read audit entry for topic=%s, _id=%s", topic, resourceId);
-//            LOGGER.error(error, e);
-//            return new InternalServerErrorException(error, e).asPromise();
-//        }
-//
-//        return client.send(request).thenAsync(closeSilently(response -> {
-//            if (!response.getStatus().isSuccessful()) {
-//                return resourceException(indexName, topic, resourceId, response).asPromise();
-//            }
-//
-//            return response.getEntity().getJsonAsync()
-//                    .then(JsonValue::json)
-//                    .then(jsonValue -> {
-//                        // the original audit JSON is under _source, and we also add back the _id
-//                        jsonValue = ElasticsearchUtil.denormalizeJson(jsonValue.get(SOURCE));
-//                        jsonValue.put(FIELD_CONTENT_ID, resourceId);
-//                        return newResourceResponse(resourceId, null, jsonValue);
-//                    })
-//                    .thenCatchAsync(internalServerException());
-//        }), noopExceptionAsyncFunction());
+
         return null;
     }
      @Override
     public Promise<ResourceResponse, ResourceException> publishEvent(final Context context, final String topic,
             final JsonValue event) {
-//        if (batchIndexer == null) {
-//            return publishSingleEvent(topic, event);
-//        }
-//        else {
-//            if (!batchIndexer.offer(topic, event)) {
-//                return new ServiceUnavailableException("Elasticsearch batch indexer full, so dropping audit event "
-//                        + indexName + "/" + topic + "/" + event.get("_id").asString()).asPromise();
-//            }
-//            return newResourceResponse(event.get(ResourceResponse.FIELD_CONTENT_ID).asString(), null,
-//                    event).asPromise();
-//        }
         return publishSingleEvent(topic, event);
 
     }
@@ -280,93 +185,6 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
             return new InternalServerErrorException(error, e).asPromise();
         }
     }
-
-//    /**
-//     * Adds an audit event to an Elasticsearch Bulk API payload.
-//     *
-//     * @param topic Event topic
-//     * @param event Event JSON payload
-//     * @param payload Elasticsearch Bulk API payload
-//     * @throws BatchException indicates failure to add-to-batch
-//     */
-//    @Override
-//    public void addToBatch(final String topic, final JsonValue event, final StringBuilder payload)
-//            throws BatchException {
-//        try {
-//            // _id is a protected Elasticsearch field so we must remove it before writing
-//            JsonValue eventCopy = event.copy();
-//            final String resourceId = eventCopy.get(FIELD_CONTENT_ID).asString();
-//            eventCopy.remove(FIELD_CONTENT_ID);
-//            final String jsonPayload = ElasticsearchUtil.normalizeJson(eventCopy);
-//
-//            // newlines have special significance in the Bulk API
-//            // https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html
-//            payload.append("{ \"index\" : { \"_type\" : ")
-//                    .append(OBJECT_MAPPER.writeValueAsString(topic))
-//                    .append(", \"_id\" : ")
-//                    .append(OBJECT_MAPPER.writeValueAsString(resourceId))
-//                    .append(" } }\n")
-//                    .append(jsonPayload)
-//                    .append('\n');
-//        } catch (IOException e) {
-//            throw new BatchException("Unexpected error while adding to batch", e);
-//        }
-//    }
-
-//    /**
-//     * Publishes a <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-bulk.html">Bulk API</a>
-//     * payload to Elasticsearch.
-//     *
-//     * @param payload Elasticsearch Bulk API payload
-//     */
-//    @Override
-//    public Promise<Void, BatchException> publishBatch(final String payload) {
-//        final Request request;
-//        try {
-//            request = createRequest(buildBulkUri(), payload);
-//        } catch (URISyntaxException e) {
-//            return newExceptionPromise(new BatchException("Incorrect URI", e));
-//        }
-//
-//        return client.send(request)
-//                .thenAsync(closeSilently(processBatchResponse()), noopExceptionAsyncFunction());
-//    }
-
-//    private AsyncFunction<Response, Void, BatchException> processBatchResponse() {
-//        return response -> {
-//            if (!response.getStatus().isSuccessful()) {
-//                throw new BatchException("Elasticsearch batch index failed: " + response.getEntity());
-//            }
-//
-//            return response.getEntity().getJsonAsync()
-//                    .then(JsonValue::json, e -> {
-//                        throw new BatchException("Unexpected error while publishing batch", e);
-//                    })
-//                    .then(responseJson -> {
-//                        if (responseJson.get("errors").asBoolean()) {
-//                            // one or more batch index operations failed, so log failures
-//                            final JsonValue items = responseJson.get("items");
-//                            final int n = items.size();
-//                            final List<Object> failureItems = new ArrayList<>(n);
-//                            for (int i = 0; i < n; ++i) {
-//                                final JsonValue item = items.get(i).get("index");
-//                                final Integer status = item.get("status").asInteger();
-//                                if (status >= 400) {
-//                                    failureItems.add(item);
-//                                }
-//                            }
-//                            try {
-//                                String jsonItems = OBJECT_MAPPER.writeValueAsString(failureItems);
-//                                String message = "One or more Elasticsearch batch index entries failed: " + jsonItems;
-//                                throw new BatchException(message);
-//                            } catch (JsonProcessingException e) {
-//                                throw new BatchException("Unexpected error while publishing batch", e);
-//                            }
-//                        }
-//                        return null;
-//                    });
-//        };
-//    }
 
 
     /**

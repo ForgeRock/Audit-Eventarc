@@ -10,7 +10,7 @@ The instructions for configuring the CAUD vary slightly from product to product;
 
 ##### Steps to configure on openidm machine
 - stop openidm if it is running
-- downlaod the forgerock-audit-eventarc-1.0.0.jar from the releases tab 
+- download the forgerock-audit-eventarc-1.0.0.jar from the releases tab 
 - copy the forgerock-audit-eventarc-1.0.0.jar file that you just used maven to build to your openidm/bundle directory
 - add to your openidm/conf/audit.json the entry "org.forgerock.audit.eventarc.EventarcAuditEventHandler" to the existing "availableAuditEventHandlers" field
 - restart openidm
