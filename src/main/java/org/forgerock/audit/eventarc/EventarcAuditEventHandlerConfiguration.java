@@ -8,7 +8,6 @@
 package org.forgerock.audit.eventarc;
 
 import org.forgerock.audit.events.handlers.EventHandlerConfiguration;
-
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 
 /**
@@ -21,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
  *    "name" : "eventarc",
  *    "topics": [ "access", "activity", "config", "authentication" ],
  *    "connection" : {
- *      "accessToken" : "myAccessToken"
+ *      "jsonCredentials" : "myJsonCredentials"
  *    },
  *    "eventarcConfiguration" : {
  *      "specVersion" : 1.0,
@@ -33,10 +32,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
  */
 public class EventarcAuditEventHandlerConfiguration extends EventHandlerConfiguration {
 
-    @JsonPropertyDescription("audit.handlers.eventarc.connection")
+    @JsonPropertyDescription("Eventarc Connection")
     private ConnectionConfiguration token = new ConnectionConfiguration();
 
-    @JsonPropertyDescription("audit.handlers.eventarc.buffering")
+    @JsonPropertyDescription("Eventarc configuration")
     private EventarcConfiguration eventarc = new EventarcConfiguration();
 
     /**
@@ -85,26 +84,26 @@ public class EventarcAuditEventHandlerConfiguration extends EventHandlerConfigur
      */
     public static class ConnectionConfiguration {
 
-        @JsonPropertyDescription("audit.handlers.eventarc.connection.accessToken")
-        private String accessToken;
+        @JsonPropertyDescription("Google service account json credentials")
+        private String jsonCredentials;
 
 
         /**
-         * Gets Eventarc accessToken for authentication.
+         * Gets Eventarc jsonCredentials for authentication.
          *
-         * @return The accessToken.
+         * @return The jsonCredentials.
          */
-        public String getAccessToken() {
-            return accessToken;
+        public String getJsonCredentials() {
+            return jsonCredentials;
         }
 
         /**
-         * Sets Eventarc accessToken for authentication.
+         * Sets Eventarc jsonCredentials for authentication.
          *.
-         * @param accessToken The accessToken.
+         * @param jsonCredentials The jsonCredentials.
          */
-        public void setAccessToken(String accessToken) {
-            this.accessToken = accessToken;
+        public void setJsonCredentials(String jsonCredentials) {
+            this.jsonCredentials = jsonCredentials;
         }
     }
 
@@ -114,35 +113,18 @@ public class EventarcAuditEventHandlerConfiguration extends EventHandlerConfigur
      */
     public static class EventarcConfiguration {
 
-        @JsonPropertyDescription("audit.handlers.eventarc.configuration.specVersion")
-        private String specVersion;
-
-        @JsonPropertyDescription("audit.handlers.eventarc.configuration.location")
+        @JsonPropertyDescription("Google cloud region")
         private String location;
 
-        @JsonPropertyDescription("audit.handlers.eventarc.configuration.project")
+        @JsonPropertyDescription("Google cloud project")
         private String project;
 
-        @JsonPropertyDescription("audit.handlers.eventarc.configuration.channel")
+        @JsonPropertyDescription("Google channel id")
         private String channel;
 
-        /**
-         * Gets the spec version.
-         *
-         * @return specVersion
-         */
-        public String getSpecVersion() {
-            return specVersion;
-        }
+        @JsonPropertyDescription("Event type (ex. forgerock.v1.event)")
+        private String eventType;
 
-        /**
-         * Sets the spec version.
-         *
-         * @param specVersion
-         */
-        public void setSpecVersion(String specVersion) {
-            this.specVersion = specVersion;
-        }
 
         /**
          * Gets the Google Project location to use when posting events to Eventarc.
@@ -160,6 +142,19 @@ public class EventarcAuditEventHandlerConfiguration extends EventHandlerConfigur
          */
         public void setLocation(String location) {
             this.location = location;
+        }
+
+        public String getEventType() {
+                    return eventType;
+                }
+
+        /**
+         * Sets the Google Event Type to use when posting events to Eventarc.
+         *
+         * @return eventType
+         */
+        public void setEventType(String eventType) {
+            this.eventType = eventType;
         }
 
         /**

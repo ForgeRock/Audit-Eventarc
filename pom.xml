@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.forgerock.commons</groupId>
     <artifactId>forgerock-audit-eventarc</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
     <packaging>bundle</packaging>
     <name>Commons - ForgeRock Audit Eventarc Support</name>
 
@@ -23,7 +23,7 @@
     <repository>
         <id>forgerock-internal-releases</id>
         <name>ForgeRock Internal Releases Repository</name>
-        <url>http://maven.forgerock.org/repo/internal-releases</url>
+        <url>https://maven.forgerock.org/repo/internal-releases</url>
         <snapshots>
             <enabled>false</enabled>
         </snapshots>
@@ -33,12 +33,6 @@
     </repository>
     </repositories>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-text</artifactId>
-            <version>1.3</version>
-        </dependency>
 
 <!--        <dependency>-->
 <!--            <groupId>org.slf4j</groupId>-->
@@ -56,27 +50,46 @@
 <!--        </dependency>-->
 
         <!-- ForgeRock Commons Dependencies -->
+    <dependencies>
+
         <dependency>
             <groupId>org.forgerock.commons</groupId>
             <artifactId>forgerock-audit-core</artifactId>
-            <version>26.2.0-20211115114133-ba11311dab2412a111e75954e56b5ebc3375abfb</version>
+            <version>26.1.0-20210407090058-81dd8fe</version>
         </dependency>
+        <dependency>
+            <groupId>org.forgerock.commons</groupId>
+            <artifactId>forgerock-util</artifactId>
+            <version>26.1.0-20210407090058-81dd8fe</version>
+        </dependency>
+        <dependency>
+            <groupId>org.forgerock.commons</groupId>
+            <artifactId>json-resource</artifactId>
+            <version>26.1.0-20210407090058-81dd8fe</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.google.auth/google-auth-library-oauth2-http -->
         <dependency>
             <groupId>org.forgerock.http</groupId>
             <artifactId>chf-client-apache-async</artifactId>
-            <version>26.2.0-20211115114133-ba11311dab2412a111e75954e56b5ebc3375abfb</version>
+            <version>26.1.0-20210407090058-81dd8fe</version>
             <optional>true</optional>
         </dependency>
         <dependency>
-            <artifactId>openam-audit-core</artifactId>
-            <groupId>org.forgerock.am</groupId>
-            <version>7.1.0</version>
+
+            <groupId>com.google.auth</groupId>
+            <artifactId>google-auth-library-oauth2-http</artifactId>
+            <version>0.21.1</version>
+            <type>bundle</type>
+            <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>org.forgerock.am</groupId>
-            <artifactId>openam-dtd-schema</artifactId>
-            <version>7.1.0</version>
-        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
+
 
     </dependencies>
     <build>
@@ -84,7 +97,32 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <version>5.1.1</version>
                 <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Import-Package>
+                            io.grpc*;
+                            com.google.api.*;
+                            *;resolution:=optional;
+                            org.forgerock.http.*;
+                            org.forgerock.commons.*;
+                            org.forgerock.util.*;
+                            org.forgerock.json.*;
+                            org.forgerock.*;
+                        </Import-Package>
+                        <Export-Package>com.google.auth.*;org.forgerock.util.*;org.forgerock.*;org.forgerock.json.*;com.google.api.*;com.google.*;com.google.cloud.*;org.forgerock.http.*;org.forgerock.commons.*;org.forgerock.audit.*;io.*;com.google.cloud.eventarc.*;org.threeten.*;io.grpc*</Export-Package>
+                        <Embedded-Dependency>
+
+                            chf-client-apache-async;scope=compile|runtime;
+                            forgerock-audit-core;scope=compile|runtime;
+                            forgerock-util;scope=compile|runtime;
+                            forgerock-test-utils;scope=compile|runtime;
+                            json-resource;scope=compile|runtime;
+                        </Embedded-Dependency>
+                    </instructions>
+                </configuration>
             </plugin>
         </plugins>
     </build>

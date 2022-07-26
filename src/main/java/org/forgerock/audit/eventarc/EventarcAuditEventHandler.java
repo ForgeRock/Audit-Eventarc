@@ -7,8 +7,6 @@
  */
 package org.forgerock.audit.eventarc;
 
-import static org.forgerock.http.handler.HttpClientHandler.OPTION_LOADER;
-import static org.forgerock.http.protocol.Responses.noopExceptionFunction;
 import static org.forgerock.json.JsonValue.array;
 import static org.forgerock.json.JsonValue.field;
 import static org.forgerock.json.JsonValue.json;
@@ -16,18 +14,24 @@ import static org.forgerock.json.JsonValue.object;
 import static org.forgerock.json.resource.ResourceException.newResourceException;
 import static org.forgerock.json.resource.ResourceResponse.FIELD_CONTENT_ID;
 import static org.forgerock.json.resource.Responses.newResourceResponse;
+import org.apache.commons.io.IOUtils;
+import static org.forgerock.http.handler.HttpClientHandler.OPTION_LOADER;
+import static org.forgerock.http.protocol.Responses.noopExceptionFunction;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
-
-import org.apache.commons.text.StringEscapeUtils;
+import java.util.UUID;
+import org.forgerock.http.apache.async.AsyncHttpClientProvider;
 import org.forgerock.audit.Audit;
 import org.forgerock.audit.events.EventTopicsMetaData;
 import org.forgerock.audit.events.handlers.AuditEventHandler;
 import org.forgerock.audit.events.handlers.AuditEventHandlerBase;
 import org.forgerock.http.Client;
 import org.forgerock.http.HttpApplicationException;
-import org.forgerock.http.apache.async.AsyncHttpClientProvider;
 import org.forgerock.http.handler.HttpClientHandler;
 import org.forgerock.http.header.AuthorizationHeader;
 import org.forgerock.http.header.ContentTypeHeader;
@@ -65,9 +69,16 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
 
     private final String baseUri;
     private final EventarcAuditEventHandlerConfiguration configuration;
+
     private final Client client;
     private final HttpClientHandler defaultHttpClientHandler;
 
+     class CustomMessage {
+        public CustomMessage(String message) {
+          this.message = message;
+        }
+        public String message;
+      }
     /**
      * Create a new {@code EventarcAuditEventHandler} instance.
      *
@@ -114,21 +125,21 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
 
     @Override
     public void shutdown() throws ResourceException {
-        if (defaultHttpClientHandler != null) {
-            try {
-                defaultHttpClientHandler.close();
-            } catch (IOException e) {
-                throw ResourceException.newResourceException(ResourceException.INTERNAL_ERROR,
-                        "An error occurred while closing the default HTTP client handler", e);
-            }
-        }
+    	 if (defaultHttpClientHandler != null) {
+    		            try {
+    		                 defaultHttpClientHandler.close();
+    		             } catch (IOException e) {
+    		                 throw ResourceException.newResourceException(ResourceException.INTERNAL_ERROR,
+    		                         "An error occurred while closing the default HTTP client handler", e);
+    		             }
+    		         }
+       
     }
-
-
+    
     @Override
     public Promise<QueryResponse, ResourceException> queryEvents(final Context context, final String topic,
            final QueryRequest query, final QueryResourceHandler handler) {
-        return null;
+           return null;
 //        final int pageSize = query.getPageSize() <= 0 ? DEFAULT_PAGE_SIZE : query.getPageSize();
 //        // set the offset to either first the offset provided, or second the paged result cookie value, or finally 0
 //        final int offset;
@@ -180,7 +191,7 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
         return e -> new InternalServerErrorException(e.getMessage(), e).asPromise();
     }
 
-    @Override
+     @Override
     public Promise<ResourceResponse, ResourceException> readEvent(final Context context, final String topic,
             final String resourceId) {
 //        final Request request;
@@ -209,8 +220,7 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
 //        }), noopExceptionAsyncFunction());
         return null;
     }
-
-    @Override
+     @Override
     public Promise<ResourceResponse, ResourceException> publishEvent(final Context context, final String topic,
             final JsonValue event) {
 //        if (batchIndexer == null) {
@@ -237,11 +247,12 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
      */
     protected Promise<ResourceResponse, ResourceException> publishSingleEvent(final String topic,
             final JsonValue event) {
+
         final String resourceId = event.get(FIELD_CONTENT_ID).asString();
         event.remove(FIELD_CONTENT_ID);
 
         try {
-            final String jsonPayload = event.asString();
+            final String jsonPayload = event.toString();
             event.put(FIELD_CONTENT_ID, resourceId);
             JsonValue payload = json(object(
                     field("channel", "projects/" + configuration.getEventarc().getProject() + "/locations/" +
@@ -250,10 +261,11 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
                     field("events", array(
                             buildEvent(resourceId,
                                        "//forgerock/projects/" + configuration.getEventarc().getProject() + "/topics/" +
-                                               topic, configuration.getEventarc().getSpecVersion(),
-                                       StringEscapeUtils.escapeJson(jsonPayload),
+                                               topic, "1.0.0",
+                                       jsonPayload,
                                        "google.cloud.pubsub.topic.v1.messagePublished")
                     ))));
+
             final Request request = createRequest(buildEventUri(), payload);
 
             return client.send(request).then(CloseSilentlyFunction.closeSilently(response -> {
@@ -265,7 +277,6 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
             }), noopExceptionFunction());
         } catch (Exception e) {
             final String error = String.format("Unable to create audit entry for topic=%s, _id=%s", topic, resourceId);
-            LOGGER.error(error, e);
             return new InternalServerErrorException(error, e).asPromise();
         }
     }
@@ -391,7 +402,7 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
                 field("source", source),
                 field("specVersion", specVersion),
                 field("textData", payload),
-                field("type", "google.cloud.pubsub.topic.v1.messagePublished")
+                field("type", configuration.getEventarc().getEventType())
 
         ));
     }
@@ -406,7 +417,7 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
             return baseUri;
         }
         final EventarcAuditEventHandlerConfiguration.EventarcConfiguration connection = configuration.getEventarc();
-        return " https://eventarcpublishing.googleapis.com/v1/projects/" + connection.getProject() + "/locations/" +
+        return "https://eventarcpublishing.googleapis.com/v1/projects/" + connection.getProject() + "/locations/" +
                 connection.getLocation() + "/channels/" + connection.getChannel() + ":publishEvents";
     }
 
@@ -432,9 +443,22 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
         final Request request = new Request();
         request.setMethod(EventarcAuditEventHandler.POST);
         request.setUri(uri);
+        String accessToken = null;
+		try {
+			accessToken = GoogleCredentials
+			    .fromStream(IOUtils.toInputStream(String.valueOf(configuration.getToken().getJsonCredentials())))
+			    .createScoped("https://www.googleapis.com/auth/cloud-platform")
+			    .refreshAccessToken()
+			    .getTokenValue();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
         if (payload != null) {
             request.getHeaders().put(ContentTypeHeader.NAME, "application/json");
-            request.getHeaders().put(AuthorizationHeader.NAME, "Bearer " + configuration.getToken().getAccessToken());
+            request.getHeaders().put(AuthorizationHeader.NAME, "Bearer " + accessToken);
             request.getHeaders().put("X-Goog-User-Project", configuration.getEventarc().getProject());
             request.setEntity(payload);
         }
