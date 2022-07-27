@@ -8,6 +8,10 @@ This integration will send events from ForgeRock to Eventarc
 
 The instructions for configuring the CAUD vary slightly from product to product; in the interest of simplicity the below is for openidm running on Ubuntu. 
 
+Eventarc lets you asynchronously deliver events from Google services, SaaS, and your own apps using loosely coupled services that react to state changes. Eventarc requires no infrastructure management — you can optimize productivity and costs while building a modern, event-driven solution.
+
+Information on creating channels and triggers in Eventarc can be found [here](https://cloud.google.com/eventarc/docs/third-parties/subscribe-to-forgerock ).
+
 ##### Steps to configure on openidm machine
 - stop openidm if it is running
 - download the forgerock-audit-eventarc-1.0.0.jar from the releases tab 
