@@ -9,7 +9,7 @@ package org.forgerock.audit.eventarc;
 
 import org.forgerock.audit.events.handlers.EventHandlerConfiguration;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * A configuration for the Eventarc audit event handler.
  * <p>
@@ -32,10 +32,10 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
  */
 public class EventarcAuditEventHandlerConfiguration extends EventHandlerConfiguration {
 
-    @JsonPropertyDescription("Eventarc Connection")
+    @JsonProperty("Eventarc Connection")
     private ConnectionConfiguration token = new ConnectionConfiguration();
 
-    @JsonPropertyDescription("Eventarc configuration")
+    @JsonProperty("Eventarc configuration")
     private EventarcConfiguration eventarc = new EventarcConfiguration();
 
     /**
@@ -84,7 +84,7 @@ public class EventarcAuditEventHandlerConfiguration extends EventHandlerConfigur
      */
     public static class ConnectionConfiguration {
 
-        @JsonPropertyDescription("Google service account json credentials")
+        @JsonProperty("Google service json credentials")
         private String jsonCredentials;
 
 
@@ -113,18 +113,17 @@ public class EventarcAuditEventHandlerConfiguration extends EventHandlerConfigur
      */
     public static class EventarcConfiguration {
 
-        @JsonPropertyDescription("Google cloud region")
+        @JsonProperty("Google location")
         private String location;
 
-        @JsonPropertyDescription("Google cloud project")
+        @JsonProperty("Google project id")
         private String project;
 
-        @JsonPropertyDescription("Google channel id")
+        @JsonProperty("Google channel (Google channel ID)")
         private String channel;
 
-        @JsonPropertyDescription("Event type (ex. forgerock.v1.event)")
+        @JsonProperty("Event type")
         private String eventType;
-
 
         /**
          * Gets the Google Project location to use when posting events to Eventarc.

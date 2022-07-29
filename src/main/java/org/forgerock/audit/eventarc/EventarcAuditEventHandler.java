@@ -166,7 +166,7 @@ public class EventarcAuditEventHandler extends AuditEventHandlerBase  {
                     field("events", array(
                             buildEvent(resourceId,
                                        "//forgerock/projects/" + configuration.getEventarc().getProject() + "/topics/" +
-                                               topic, "1.0.0",
+                                               topic, "1.0",
                                        jsonPayload,
                                        "google.cloud.pubsub.topic.v1.messagePublished")
                     ))));
