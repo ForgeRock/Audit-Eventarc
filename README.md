@@ -14,7 +14,7 @@ Information on creating channels and triggers in Eventarc can be found [here](ht
 
 ##### Steps to configure on openidm machine
 - stop openidm if it is running
-- download the forgerock-audit-eventarc-1.0.0.jar from the releases tab 
+- download the forgerock-audit-eventarc-1.0.0.jar from the [releases](https://github.com/ForgeRock/Audit-Eventarc/releases) tab 
 - copy the forgerock-audit-eventarc-1.0.0.jar file that you just used maven to build to your openidm/bundle directory
 - add to your openidm/conf/audit.json the entry "org.forgerock.audit.eventarc.EventarcAuditEventHandler" to the existing "availableAuditEventHandlers" field
 - restart openidm
